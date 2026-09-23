@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Tarefas{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>Tarefas</h3>
+  <a href="{{ url_for('nova_tarefa') }}" class="btn btn-primary">+ Nova Tarefa</a>
+</div>
+
+<form class="row g-2 mb-4" method="get">
+  <div class="col-auto">
+    <select name="status" class="form-select" onchange="this.form.submit()">
+      <option value="">Todos os status</option>
+      <option value="pendente" {{ 'selected' if filtro_status == 'pendente' }}>Pendente</option>
+      <option value="em_andamento" {{ 'selected' if filtro_status == 'em_andamento' }}>Em andamento</option>
+      <option value="concluida" {{ 'selected' if filtro_status == 'concluida' }}>Concluída</option>
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="projeto_id" class="form-select" onchange="this.form.submit()">
+      <option value="">Todos os projetos</option>
+      {% for p in projetos %}
+        <option value="{{ p.id }}" {{ 'selected' if filtro_projeto|string == p.id|string }}>{{ p.nome }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</form>
+
+<table class="table table-bordered bg-white">
+  <thead class="table-dark">
+    <tr>
+      <th>Título</th>
+      <th>Projeto</th>
+      <th>Status</th>
+      <th>Prioridade</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t in tarefas %}
+    <tr>
+      <td>{{ t.titulo }}</td>
+      <td>{{ projetos_por_id.get(t.projeto_id, '—') }}</td>
+      <td><span class="badge bg-secondary">{{ t.status }}</span></td>
+      <td>{{ t.prioridade }}</td>
+      <td>
+        <a href="{{ url_for('editar_tarefa', tarefa_id=t.id) }}" class="btn btn-sm btn-warning">Editar</a>
+        <form action="{{ url_for('excluir_tarefa', tarefa_id=t.id) }}" method="post" class="d-inline"
+              onsubmit="return confirm('Excluir esta tarefa?');">
+          <button class="btn btn-sm btn-danger">Excluir</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="text-center text-muted">Nenhuma tarefa encontrada.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Gestão de Tarefas{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-expand navbar-dark bg-dark mb-4">
+    <div class="container">
+      <a class="navbar-brand" href="{{ url_for('index') }}">📋 Gestão de Tarefas</a>
+      <div>
+        <a class="btn btn-outline-light btn-sm me-2" href="{{ url_for('index') }}">Tarefas</a>
+        <a class="btn btn-outline-light btn-sm" href="{{ url_for('projetos_view') }}">Projetos</a>
+      </div>
+    </div>
+  </nav>
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for categoria, msg in messages %}
+          <div class="alert {{ 'alert-danger' if categoria == 'erro' else 'alert-success' }}">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

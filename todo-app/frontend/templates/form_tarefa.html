@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if tarefa else 'Nova' }} Tarefa{% endblock %}
+{% block content %}
+
+<h3>{{ 'Editar' if tarefa else 'Nova' }} Tarefa</h3>
+
+<form method="post" class="bg-white p-4 rounded shadow-sm">
+  <div class="mb-3">
+    <label class="form-label">Título</label>
+    <input type="text" name="titulo" class="form-control" required
+           value="{{ tarefa.titulo if tarefa else '' }}">
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Descrição</label>
+    <textarea name="descricao" class="form-control" rows="3">{{ tarefa.descricao if tarefa else '' }}</textarea>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Status</label>
+      <select name="status" class="form-select">
+        {% for s in ['pendente', 'em_andamento', 'concluida'] %}
+        <option value="{{ s }}" {{ 'selected' if tarefa and tarefa.status == s }}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Prioridade</label>
+      <select name="prioridade" class="form-select">
+        {% for p in ['baixa', 'media', 'alta'] %}
+        <option value="{{ p }}" {{ 'selected' if tarefa and tarefa.prioridade == p }}>{{ p }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Projeto</label>
+      <select name="projeto_id" class="form-select">
+        <option value="">— nenhum —</option>
+        {% for p in projetos %}
+        <option value="{{ p.id }}" {{ 'selected' if tarefa and tarefa.projeto_id == p.id }}>{{ p.nome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <button class="btn btn-primary">Salvar</button>
+  <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}
