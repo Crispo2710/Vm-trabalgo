@@ -1,4 +1,3 @@
-cat << 'EOF' > database.py
 import requests
 
 DB_URL = "http://192.168.1.11:5001/db/query"
@@ -56,4 +55,3 @@ class get_connection:
 
 def init_db():
     pass
-EOF
