@@ -25,16 +25,16 @@ class RemoteCursor:
     def fetchone(self):
         if self.resultados:
             return self.resultados[0]
-        return {"id": self.lastrowid or 1, "titulo": "", "descricao": "", "status": "pendente", "prioridade": "media", "projeto_id": None}
+        return None
 
 class RemoteConnection:
     def execute(self, sql, params=()):
         params_list = list(params) if params else []
         res = executar_query_remota(sql, params_list)
-
+        
         linhas = res.get("rows", []) if res else []
         lastrowid = res.get("lastrowid") if res else None
-
+        
         cursor = RemoteCursor(linhas, lastrowid)
         return cursor
 
