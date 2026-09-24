@@ -1,7 +1,7 @@
 import requests
 
 DB_URL = "http://192.168.1.11:5001/db/query"
-DB_PATH = "remoto"  # Necessário para compatibilidade com a importação do app.py
+DB_PATH = "remoto"
 
 def executar_query_remota(sql, params=[]):
     try:
@@ -15,27 +15,34 @@ def executar_query_remota(sql, params=[]):
         print(f"Falha de conexão com a VM de Banco: {e}")
         return None
 
-class MockRow(dict):
-    pass
+def inferir_colunas(sql):
+    """Mapeia os nomes das colunas com base na tabela acedida na query."""
+    sql_lower = sql.lower()
+    if "projetos" in sql_lower:
+        return ["id", "nome", "descricao"]
+    elif "tarefas" in sql_lower:
+        return ["id", "titulo", "descricao", "status", "prioridade", "projeto_id"]
+    return []
 
 class RemoteCursor:
-    def __init__(self, res):
+    def __init__(self, res, sql=""):
         if res and isinstance(res, dict):
             rows = res.get("rows", [])
-            cols = res.get("columns", [])
+            cols = res.get("columns") or res.get("cols") or inferir_colunas(sql)
             self.lastrowid = res.get("lastrowid")
             self.rowcount = res.get("rowcount", len(rows))
         else:
-            rows, cols, self.lastrowid, self.rowcount = [], [], None, 0
+            rows, cols, self.lastrowid, self.rowcount = [], inferir_colunas(sql), None, 0
 
         self._rows = []
         for r in rows:
             if isinstance(r, dict):
-                self._rows.append(MockRow(r))
-            elif isinstance(r, (list, tuple)) and cols:
-                self._rows.append(MockRow(zip(cols, r)))
+                self._rows.append(dict(r))
+            elif isinstance(r, (list, tuple)):
+                chaves = cols if (cols and len(cols) == len(r)) else [f"col_{i}" for i in range(len(r))]
+                self._rows.append(dict(zip(chaves, r)))
             else:
-                self._rows.append(MockRow())
+                self._rows.append({"resultado": r})
         
         self._index = 0
 
@@ -49,25 +56,13 @@ class RemoteCursor:
             return row
         if self._rows:
             return self._rows[0]
-        return MockRow({
-            "id": self.lastrowid or 1,
-            "titulo": "Tarefa Recém-Criada",
-            "descricao": "",
-            "status": "pendente",
-            "prioridade": "media",
-            "projeto_id": None,
-            "nome": "Projeto Padrão"
-        })
+        return None
 
 class RemoteConnection:
-    def __init__(self):
-        self.cursor_obj = None
-
     def execute(self, sql, params=()):
         params_list = list(params) if params else []
         res = executar_query_remota(sql, params_list)
-        self.cursor_obj = RemoteCursor(res)
-        return self.cursor_obj
+        return RemoteCursor(res, sql)
 
     def commit(self):
         pass
