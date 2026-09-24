@@ -25,7 +25,6 @@ class RemoteCursor:
     def fetchone(self):
         if self.resultados:
             return self.resultados[0]
-        # Retorna um tuplo simulado com valores padrão para evitar TypeError no app.py
         return (self.lastrowid or 1, "Tarefa Padrão", "", "pendente", "media", 1)
 
 class RemoteConnection:
