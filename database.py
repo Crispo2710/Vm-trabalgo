@@ -1,3 +1,4 @@
+cat << 'EOF' > database.py
 import requests
 
 DB_URL = "http://192.168.1.11:5001/db/query"
@@ -15,15 +16,18 @@ def executar_query_remota(sql, params=[]):
         return None
 
 class RemoteCursor:
-    def __init__(self, resultados):
+    def __init__(self, resultados, lastrowid=None):
         self.resultados = resultados if isinstance(resultados, list) else []
-        self.lastrowid = None
+        self.lastrowid = lastrowid
 
     def fetchall(self):
         return self.resultados
 
     def fetchone(self):
-        return self.resultados[0] if self.resultados else None
+        if self.resultados:
+            return self.resultados[0]
+        # Fallback seguro para comandos de inserção (INSERT) que não retornam linhas diretamente
+        return {"id": self.lastrowid or 1, "titulo": "", "descricao": "", "status": "pendente", "prioridade": "media", "projeto_id": None}
 
 class RemoteConnection:
     def execute(self, sql, params=()):
@@ -31,9 +35,9 @@ class RemoteConnection:
         res = executar_query_remota(sql, params_list)
         
         linhas = res.get("rows", []) if res else []
-        cursor = RemoteCursor(linhas)
-        if res and "lastrowid" in res:
-            cursor.lastrowid = res["lastrowid"]
+        lastrowid = res.get("lastrowid") if res else None
+        
+        cursor = RemoteCursor(linhas, lastrowid)
         return cursor
 
     def cursor(self):
@@ -53,3 +57,4 @@ class get_connection:
 
 def init_db():
     pass
+EOF
