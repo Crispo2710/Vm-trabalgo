@@ -1,6 +1,7 @@
 import requests
 
 DB_URL = "http://192.168.1.11:5001/db/query"
+DB_PATH = "remoto"  # Necessário para compatibilidade com a importação do app.py
 
 def executar_query_remota(sql, params=[]):
     try:
@@ -15,7 +16,6 @@ def executar_query_remota(sql, params=[]):
         return None
 
 class MockRow(dict):
-    """Permite acesso aos campos tanto por chave dicionário como por índice se necessário."""
     pass
 
 class RemoteCursor:
@@ -49,7 +49,6 @@ class RemoteCursor:
             return row
         if self._rows:
             return self._rows[0]
-        # Fallback seguro caso venha vazio (ex: recém-criado)
         return MockRow({
             "id": self.lastrowid or 1,
             "titulo": "Tarefa Recém-Criada",
