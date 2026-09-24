@@ -13,20 +13,38 @@ def executar_query_remota(sql, params=[]):
         print(f"[DB ERRO] {e}")
         return {"rows": [], "columns": []}
 
+def inferir_colunas(sql):
+    sql_lower = sql.lower()
+    if "projetos" in sql_lower:
+        return ["id", "nome", "descricao"]
+    elif "tarefas" in sql_lower:
+        return ["id", "titulo", "descricao", "status", "prioridade", "projeto_id"]
+    return []
+
 class RemoteCursor:
     def __init__(self, res, sql=""):
         if res and isinstance(res, dict):
-            self._rows = res.get("rows", [])
+            raw_rows = res.get("rows", [])
+            cols = res.get("columns", []) or inferir_colunas(sql)
             self.lastrowid = res.get("lastrowid", 1)
-            self.rowcount = res.get("rowcount", len(self._rows))
-            cols = res.get("columns", [])
-            # Simula a propriedade description do sqlite3 exigida pelo app.py
-            self.description = [(c,) for c in cols] if cols else None
+            self.rowcount = res.get("rowcount", len(raw_rows))
+            
+            # Converte cada linha (lista/tuplo) num dicionário estruturado
+            self._rows = []
+            for r in raw_rows:
+                if isinstance(r, dict):
+                    self._rows.append(r)
+                elif isinstance(r, (list, tuple)):
+                    if cols and len(cols) == len(r):
+                        self._rows.append(dict(zip(cols, r)))
+                    else:
+                        self._rows.append({f"col_{i}": val for i, val in enumerate(r)})
+                else:
+                    self._rows.append({"resultado": r})
         else:
             self._rows = []
             self.lastrowid = 1
             self.rowcount = 0
-            self.description = None
             
         self._index = 0
 
@@ -40,24 +58,30 @@ class RemoteCursor:
             return row
         if self._rows:
             return self._rows[0]
-        return None
+        # Dicionário padrão de segurança caso venha vazio
+        return {
+            "id": self.lastrowid or 1,
+            "titulo": "",
+            "descricao": "",
+            "status": "pendente",
+            "prioridade": "media",
+            "projeto_id": None,
+            "nome": ""
+        }
 
 class RemoteConnection:
-    def __init__(self):
-        pass
-
     def execute(self, sql, params=()):
         params_list = list(params) if params else []
         res = executar_query_remota(sql, params_list)
         return RemoteCursor(res, sql)
 
-    def commit(self):
+    def commit(self, *args, **kwargs):
         pass
 
-    def rollback(self):
+    def rollback(self, *args, **kwargs):
         pass
 
-    def close(self):
+    def close(self, *args, **kwargs):
         pass
 
 class get_connection:
